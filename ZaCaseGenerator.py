@@ -1,4 +1,5 @@
 import csv
+import codecs
 import configparser
 
 from XmindReader import XmindReader
@@ -16,8 +17,8 @@ class TestCaseGenerator:
             'Name',  # 用例名称
             'Precondition',  # 前置条件
             'Objective',  # 页面
-            'Test Script (Steps) - Step',  # 测试脚本-步骤
-            'Test Script (Steps) - Expected Result',  # 测试脚本-期待结果
+            'Test Script (Step-by-Step) - Step',  # 测试脚本-步骤
+            'Test Script (Step-by-Step) - Expected Result',  # 测试脚本-期待结果
             'Folder',  # 目录
             'Status',  # 状态
             'Priority',  # 优先级
@@ -42,12 +43,16 @@ class TestCaseGenerator:
         self.file_path = file_path
 
         if file_type.lower() == 'csv':
-            self.csv_file = open(self.file_path, 'w', newline='')
+            self.csv_file = open(self.file_path, 'w', newline='', encoding='utf-8')
             self.__csv_writer__ = csv.writer(self.csv_file)
+            self.csv_file.write(codecs.BOM_UTF8.decode('utf-8'))
             self.__csv_writer__.writerow(self.headers)
             self.csv_data = []
 
         self.connector = '&-&'
+
+    def __del__(self):
+        self.csv_file.close()
 
     def set_connector(self, connector):
         """
@@ -57,81 +62,71 @@ class TestCaseGenerator:
         """
         self.connector = connector
 
-    def set_header_level(self, header_level):
+    def set_headers_level(self, headers_level):
         """
         设置字段层级
-        :param header_level: dict
+        :param headers_level: dict
             header_list: [name_level, precondition_level, objective_level, step_level, expect_level]
             format: {'name_level': 1, 'precondition_level: 2}
         :return:
         """
-        for header, level in header_level.items():
+        header_match = {
+            'Name': 'name_level',
+            'Objective': 'objective_level',
+            'Precondition': 'precondition_level',
+            'Test Script (Step-by-Step) - Step': 'step_level',
+            'Test Script (Step-by-Step) - Expected Result': 'expect_level'
+        }
+        for header, level in headers_level.items():
             if isinstance(level, int) or str(level).isdigit():
-                setattr(self, header, int(level)-1)
+                setattr(self, header_match[header], int(level)-1)
             else:
                 print(str(header) + ' is illegal')
 
     def init_csv_data(self, test_data, folder, status, component, owner):
         """
         初始化csv数据
-        :param test_data:
-        :param folder:
-        :param status:
-        :param component:
-        :param owner:
+        :param test_data: 用例数据
+        :param folder: 目录
+        :param status: 状态
+        :param component: 组件
+        :param owner: 创建者
         :return:
         """
-        # row data
-        name = ''
-        objective = ''
-        precondition = ''
-        step_list = []
-        expect_list = []
-        priority = ''
-        label = ''
-
         if status not in self.status:
             status = self.status[0]
 
-        start = True
-        for data in test_data:
-
+        step_list = []
+        expect_list = []
+        for index in range(len(test_data)):
+            data = test_data[index]
             test_case = data['test_case'].split(self.connector)
-            if start:
-                name = test_case[self.name_level]
-                objective = test_case[self.precondition_level]
-                precondition = test_case[self.precondition_level]
-                priority = data['priority']
-                label = data['label']
-                start = False
 
-            tmp_name = test_case[self.name_level]
-            tmp_objective = test_case[self.precondition_level]
-            tmp_precondition = test_case[self.precondition_level]
-            tmp_priority = data['priority']
-            tmp_label = data['label']
+            name = test_case[self.name_level]
+            objective = test_case[self.objective_level]
+            precondition = test_case[self.precondition_level]
+            priority = data['priority']
+            label = data['label']
 
-            if name == tmp_name and tmp_precondition == precondition:
-                step_list.append(test_case[self.step_level])
-                expect_list.append(test_case[self.expect_level])
+            step_list.append(test_case[self.step_level])
+            expect_list.append(test_case[self.expect_level])
+
+            if index < len(test_data) - 1:
+                next_test_case = test_data[index+1]['test_case'].split(self.connector)
+                next_name = next_test_case[self.name_level]
+                next_precondition = next_test_case[self.precondition_level]
+
+                if name != next_name or precondition != next_precondition:
+                    step = '\n'.join(step_list)
+                    expect = '\n'.join(expect_list)
+                    self.csv_data.append([name, precondition, objective, step, expect, folder, status, priority, component, label, owner])
+                    step_list = []
+                    expect_list = []
             else:
                 step = '\n'.join(step_list)
                 expect = '\n'.join(expect_list)
-                print([name, precondition, objective, step, expect, folder, status, priority, component, label, owner])
                 self.csv_data.append([name, precondition, objective, step, expect, folder, status, priority, component, label, owner])
 
-                # reset row
-                name = tmp_name
-                objective = tmp_objective
-                precondition = tmp_precondition
-                step_list = []
-                expect_list = []
-                priority = tmp_priority
-                label = tmp_label
-                step_list.append(test_case[self.step_level])
-                expect_list.append(test_case[self.expect_level])
-
-        print(self.csv_data)
         self.import_csv_data()
 
     def import_csv_data(self):
@@ -140,11 +135,13 @@ class TestCaseGenerator:
         :return:
         """
         if self.csv_data:
+            print(self.csv_data)
             for data in self.csv_data:
                 gbk_data = []
                 for item in data:
-                    gbk_data.append(item.encode('gbk', 'replace').decode('gbk', 'replace'))
-
+                    # gbk_data.append(item.encode('gbk', 'replace').decode('gbk', 'replace'))
+                    gbk_data.append(item)
+                print(gbk_data)
                 self.__csv_writer__.writerow(gbk_data)
 
             print('csv数据导入成功')
@@ -161,8 +158,8 @@ if __name__ == '__main__':
 
     tc = TestCaseGenerator(csv_save_path)
     tc.init_csv_data(test_data_list,
-                     folder='目录1/目录2',
-                     status='ab',
-                     component='组件',
-                     owner='耿裕明')
+                     folder='/通知中心/test',
+                     status='Draft',
+                     component='None',
+                     owner='gengyuming')
 
