@@ -1,9 +1,15 @@
 import csv
+
+import configparser
+
 from XmindReader import XmindReader
 
 
 class TestCaseGenerator:
     def __init__(self, csv_path):
+        self.config = configparser.RawConfigParser()
+        self.config.read('./config.ini', 'utf-8')
+        self.connector = self.config.get('common', 'connector')
         self.csv_file = open(csv_path, 'w', newline='')
         self.__headers__ = ['所属模块', '用例标题', '前置条件', '步骤', '预期', '关键词', '优先级', '用例类型', '适用阶段']
         self.__csv_writer__ = csv.DictWriter(self.csv_file, self.__headers__)
@@ -15,10 +21,8 @@ class TestCaseGenerator:
         return self.__headers__
 
     def init_csv_data(self, test_data):
-        titles = []
-
         for data in test_data:
-            steps = data['test_case'].split('&-&')
+            steps = data['test_case'].split(self.connector)
 
             title = '_'.join(steps[:-2])
             # index = 1
