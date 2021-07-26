@@ -30,10 +30,10 @@ class TestCaseGenerator:
             # self._titles.append(title + '_' + str(index))
             self._titles.append(title)
             self._csv_data.append({'title': title,
-                                   'condition': data['condition'],
+                                   'condition': data['precondition'],
                                    'test_case': test_case,
                                    'expect': steps[-1],
-                                   'level': data['level']})
+                                   'level': data['priority']})
 
     def import_csv_data(self, module, case_type, phase):
         if self._csv_data:
@@ -56,8 +56,8 @@ class TestCaseGenerator:
 
 
 if __name__ == '__main__':
-    xmind_path = './ZentaoCaseBuilder/Xmind/aaa.xmind'
-    csv_save_path = './ZentaoCaseBuilder/TestCase/test_case.csv'
+    xmind_path = './Xmind/调试脑图.xmind'
+    csv_save_path = './TestCase/test_case.csv'
     xm = XmindReader(xmind_path)
     test_data_list = xm.get_test_data()
     tc = TestCaseGenerator(csv_save_path)
