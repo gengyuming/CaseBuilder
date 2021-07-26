@@ -216,7 +216,7 @@ class XmindReader:
 
         return self.test_case
 
-    def generate_test_data(self, catalog, test_case='', precondition='', label='', priority='', summaries=None):
+    def generate_test_data(self, catalog, test_case='', precondition='', label='', priority='', status='', summaries=None):
         """
         生成测试用例
         :param catalog: 目录结构
@@ -224,12 +224,17 @@ class XmindReader:
         :param precondition: 前置条件
         :param label: 标签
         :param priority: 优先级
+        :param status: 状态
         :param summaries: 概要
         :return:
         """
         priority_match = {'priority-1': 'High',
                           'priority-2': 'Normal',
                           'priority-3': 'Low'}
+
+        status_match = {'tag-yellow': 'pending',
+                        'tag-red': 'failed',
+                        'tag-green': 'pass'}
 
         for index in range(len(catalog)):
             topic = catalog[index]
@@ -252,7 +257,8 @@ class XmindReader:
                 for mark in topic['markers']:
                     if mark in priority_match.keys():
                         priority = priority_match[mark]
-                        break
+                    if mark in status_match.keys():
+                        status = status_match[mark]
 
             if 'summaries' in topic.keys():
                 summaries = topic['summaries']
@@ -264,6 +270,7 @@ class XmindReader:
                                             precondition=precondition,
                                             label=label,
                                             priority=priority,
+                                            status=status,
                                             summaries=summaries)
                     # print(test_case)
                 else:
@@ -272,6 +279,7 @@ class XmindReader:
                                             precondition=precondition,
                                             label=label,
                                             priority=priority,
+                                            status=status,
                                             summaries=summaries)
 
             else:
