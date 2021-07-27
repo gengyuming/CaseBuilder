@@ -6,7 +6,7 @@ import xmind
 
 class XmindReader:
     """
-        Xmind解析器
+    Xmind解析器
     """
 
     def __init__(self, file):
@@ -265,35 +265,31 @@ class XmindReader:
 
             if 'children' in topic.keys():
                 if test_case:
-                    self.generate_test_data(catalog=topic['children'],
-                                            test_case=test_case + self.connector + topic['title'],
-                                            precondition=precondition,
-                                            label=label,
-                                            priority=priority,
-                                            status=status,
-                                            summaries=summaries)
-                    # print(test_case)
+                    tmp_case = test_case + self.connector + topic['title']
                 else:
-                    self.generate_test_data(catalog=topic['children'],
-                                            test_case=topic['title'],
-                                            precondition=precondition,
-                                            label=label,
-                                            priority=priority,
-                                            status=status,
-                                            summaries=summaries)
+                    tmp_case = topic['title']
+
+                self.generate_test_data(catalog=topic['children'],
+                                        test_case=tmp_case,
+                                        precondition=precondition,
+                                        label=label,
+                                        priority=priority,
+                                        status=status,
+                                        summaries=summaries)
 
             else:
+
                 if summary:
-                    test_data = {'precondition': precondition,
-                                 'label': label,
-                                 'test_case': test_case + self.connector + topic['title'] + self.connector + summary,
-                                 'priority': priority}
+                    final_case = test_case + self.connector + topic['title'] + self.connector + summary
                 else:
-                    test_data = {'precondition': precondition,
-                                 'label': label,
-                                 'test_case': test_case + self.connector + topic['title'],
-                                 'priority': priority}
-                # print(test_data)
+                    final_case = test_case + self.connector + topic['title']
+
+                test_data = {'precondition': precondition,
+                             'label': label,
+                             'test_case': final_case,
+                             'priority': priority,
+                             'status': status}
+
                 self.test_data.append(test_data)
 
 
