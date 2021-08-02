@@ -3,6 +3,8 @@ import zipfile
 import json
 import xmind
 
+from CaseEnum import Priority, CaseStatus, ResultStatus
+
 
 class XmindReader:
     """
@@ -216,36 +218,24 @@ class XmindReader:
 
         return self.test_case
 
-    def generate_test_data(self, catalog, test_case='', precondition='', label='', priority='', status='', summaries=None):
+    def generate_test_data(self, catalog, test_case='', precondition='', label='', markers='', summaries=None):
         """
         生成测试用例
         :param catalog: 目录结构
         :param test_case: 递归临时存储测试用例
         :param precondition: 前置条件
         :param label: 标签
-        :param priority: 优先级
-        :param status: 状态
+        :param markers: 标记
         :param summaries: 概要
         :return:
         """
-        priority_match = {'priority-1': 'High',
-                          'priority-2': 'Normal',
-                          'priority-3': 'Low'}
-
-        status_match = {'tag-yellow': 'pending',
-                        'tag-red': 'failed',
-                        'tag-green': 'pass'}
-
         for index in range(len(catalog)):
             topic = catalog[index]
             summary = ''
             if summaries:
-                # print(summaries)
                 for s in summaries:
                     if index in range(s['range'][0], s['range'][1] + 1):
-
                         summary = s['title']
-                        # print(summary)
 
             if 'notes' in topic.keys():
                 precondition = topic['notes']
@@ -254,11 +244,7 @@ class XmindReader:
                 label = '\n'.join(topic['labels'])
 
             if 'markers' in topic.keys():
-                for mark in topic['markers']:
-                    if mark in priority_match.keys():
-                        priority = priority_match[mark]
-                    if mark in status_match.keys():
-                        status = status_match[mark]
+                markers = topic['markers']
 
             if 'summaries' in topic.keys():
                 summaries = topic['summaries']
@@ -273,8 +259,7 @@ class XmindReader:
                                         test_case=tmp_case,
                                         precondition=precondition,
                                         label=label,
-                                        priority=priority,
-                                        status=status,
+                                        markers=markers,
                                         summaries=summaries)
 
             else:
@@ -287,8 +272,7 @@ class XmindReader:
                 test_data = {'precondition': precondition,
                              'label': label,
                              'test_case': final_case,
-                             'priority': priority,
-                             'status': status}
+                             'markers': markers}
 
                 self.test_data.append(test_data)
 
